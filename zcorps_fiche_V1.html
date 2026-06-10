@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiche de Personnage - Zcorps</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: var(--primary-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .character-sheet {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .character-sheet {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .dice-input {
+            width: 60px;
+            text-align: center;
+        }
+
+        .characteristic-list,
+        .skill-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .characteristic-item,
+        .skill-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            transition: background-color 0.3s;
+        }
+
+        .characteristic-item:hover,
+        .skill-item:hover {
+            background-color: #dfe6e9;
+        }
+
+        .characteristic-item .name,
+        .skill-item .name {
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .characteristic-item .value,
+        .skill-item .value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .skill-item .value {
+            cursor: pointer;
+        }
+
+        .skill-item .value:hover {
+            color: var(--accent-color);
+        }
+
+        .dice-roller {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dice-icon {
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--accent-color);
+        }
+
+        .points-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .points-used {
+            font-weight: bold;
+        }
+
+        .points-remaining {
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        .points-remaining.warning {
+            color: var(--warning-color);
+        }
+
+        .points-remaining.danger {
+            color: var(--danger-color);
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #219653;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--secondary-color);
+        }
+
+        .modal-close:hover {
+            color: var(--danger-color);
+        }
+
+        .dice-result {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .dice {
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .dice.total {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .character-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .character-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 15px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .character-card .name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .character-card .characteristics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .character-card .char-item {
+            background-color: var(--light-color);
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+        }
+
+        .character-card .skills-count {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .success-message {
+            background-color: var(--success-color);
+            color: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .error-message {
+            background-color: var(--danger-color);
+            color: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .skill-selector {
+            margin-bottom: 15px;
+        }
+
+        .skill-selector select {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .skill-selector .btn {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Fiches de Personnage - Zcorps</h1>
+
+        <div id="message-container"></div>
+
+        <div class="card">
+            <h2>📝 Créer une nouvelle fiche</h2>
+            <div class="form-group">
+                <label for="character-name">Nom du personnage</label>
+                <input type="text" id="character-name" placeholder="Ex: Arthur">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="createCharacter()">Créer la fiche</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="character-sheet-container">
+            <h2 id="sheet-title">Fiche de <span id="sheet-character-name"></span></h2>
+            
+            <div class="character-sheet">
+                <div>
+                    <div class="section">
+                        <h3>📊 Caractéristiques</h3>
+                        <p style="margin-bottom: 10px; font-size: 0.9rem;">
+                            <strong>Règles :</strong> 6D à répartir (2D par défaut).
+                        </p>
+                        <div class="characteristic-list" id="characteristics-list"></div>
+                        <div class="points-info">
+                            <span>Points utilisés : <span class="points-used" id="characteristics-used">0</span>D</span>
+                            <span>Points restants : <span class="points-remaining" id="characteristics-remaining">6</span>D</span>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>🎯 Compétences</h3>
+                        <p style="margin-bottom: 10px; font-size: 0.9rem;">
+                            <strong>Règles :</strong> 12 compétences ouvertes (1D par défaut) + 7D à répartir.
+                        </p>
+                        <div class="skill-selector">
+                            <label for="new-skill">Ajouter une compétence</label>
+                            <select id="new-skill">
+                                <option value="">-- Sélectionnez une compétence --</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="addSkill()">Ajouter</button>
+                        </div>
+                        <div class="skill-list" id="skills-list"></div>
+                        <div class="points-info">
+                            <span>Compétences ouvertes : <span id="skills-count">0</span>/12</span>
+                            <span>Points utilisés : <span class="points-used" id="skills-used">0</span>D</span>
+                            <span>Points restants : <span class="points-remaining" id="skills-remaining">7</span>D</span>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="saveCharacter()">Sauvegarder</button>
+                        <button class="btn btn-danger" onclick="deleteCharacter()">Supprimer</button>
+                        <button class="btn btn-secondary" onclick="exportCharacter()">Exporter</button>
+                        <button class="btn btn-secondary" onclick="backToList()">Retour</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="character-list-container">
+            <h2>📋 Mes fiches de personnage</h2>
+            <div class="character-list" id="character-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal pour les résultats de dés -->
+    <div class="modal" id="dice-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="dice-modal-title">Résultat du lancer</h3>
+                <span class="modal-close" onclick="closeDiceModal()">&times;</span>
+            </div>
+            <div id="dice-modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Données des caractéristiques et compétences
+        const characteristics = {
+            agilite: { name: "Agilité", description: "Équilibre, rapidité, souplesse et capacités motrices." },
+            adresse: { name: "Adresse", description: "Coordination œil-main, manipulation d'objets." },
+            puissance: { name: "Puissance", description: "Résistance aux dégâts et puissance physique." },
+            connaissances: { name: "Connaissances", description: "Capacité à mémoriser, apprendre et savoir." },
+            perception: { name: "Perception", description: "Vivacité d'esprit et attention aux détails." },
+            presence: { name: "Présence", description: "Force émotionnelle, charisme et volonté." }
+        };
+
+        const skills = {
+            agilite: [
+                { id: "acrobaties", name: "Acrobaties", description: "Gymnastique, équilibre, danse, chutes en arts martiaux." },
+                { id: "bagarre", name: "Bagarre", description: "Combat à mains nues." },
+                { id: "contorsion", name: "Contorsion", description: "S'échapper de liens physiques." },
+                { id: "discretion", name: "Discrétion", description: "Se déplacer silencieusement et éviter les détections." },
+                { id: "equitation", name: "Équitation", description: "Contrôler et monter des montures." },
+                { id: "esquive", name: "Esquive", description: "Éviter une attaque ou un piège." },
+                { id: "grimper", name: "Grimper", description: "Escalader diverses surfaces." },
+                { id: "melee", name: "Mêlée", description: "Utiliser des armes de mêlée." },
+                { id: "sauter", name: "Sauter", description: "Sauter par-dessus des obstacles." }
+            ],
+            adresse: [
+                { id: "armes_a_feu", name: "Armes à feu", description: "Tirer avec des armes à feu de tout type." },
+                { id: "arme_de_jet", name: "Arme de jet", description: "Combattre avec des armes de jet." },
+                { id: "crochetage", name: "Crochetage", description: "Ouvrir une serrure mécanique ou un coffre." },
+                { id: "dextérité", name: "Dextérité", description: "Faire les poches, prestidigitation." },
+                { id: "lancer", name: "Lancer", description: "Toucher une cible avec un objet lancé." },
+                { id: "pilotage", name: "Pilotage", description: "Utiliser tous types de véhicules." },
+                { id: "réparer", name: "Réparer", description: "Créer, réparer ou modifier des gadgets." }
+            ],
+            puissance: [
+                { id: "courir", name: "Courir", description: "Se déplacer rapidement en évitant les obstacles." },
+                { id: "endurance", name: "Endurance", description: "Résistance à la douleur et au poison." },
+                { id: "nager", name: "Nager", description: "Se déplacer et survivre dans l'eau." },
+                { id: "soulever", name: "Soulever", description: "Déplacer des objets lourds." }
+            ],
+            connaissances: [
+                { id: "affaires", name: "Affaires", description: "Connaissances des pratiques commerciales." },
+                { id: "contrefacon", name: "Contrefaçon", description: "Créer ou remarquer des données fausses." },
+                { id: "demolition", name: "Démolition", description: "Utiliser des explosifs." },
+                { id: "electronique", name: "Électronique", description: "Utiliser et inventer de l'équipement électronique." },
+                { id: "erudition", name: "Érudition", description: "Savoir et éducation dans divers domaines." },
+                { id: "informatique", name: "Informatique", description: "Programmer et utiliser des ordinateurs." },
+                { id: "langues", name: "Langues", description: "Capacité à utiliser divers langages." },
+                { id: "medecine", name: "Médecine", description: "Premiers secours et procédures médicales." },
+                { id: "navigation", name: "Navigation", description: "Déterminer une trajectoire." },
+                { id: "securite", name: "Sécurité", description: "Installer ou pirater des systèmes de sécurité." },
+                { id: "sciences_occultes", name: "Sciences occultes", description: "Connaissances ésotériques." }
+            ],
+            perception: [
+                { id: "art", name: "Art", description: "Créer des œuvres d'art." },
+                { id: "camouflage", name: "Camouflage", description: "Se cacher ou dissimuler des objets." },
+                { id: "chercher", name: "Chercher", description: "Retrouver des objets ou personnes dissimulées." },
+                { id: "connaissance_de_la_rue", name: "Connaissance de la Rue", description: "Trouver des informations dans un environnement urbain." },
+                { id: "investigation", name: "Investigation", description: "Recueillir des informations et analyser des données." },
+                { id: "jeux", name: "Jeux", description: "Jouer aux jeux de stratégie et de hasard." },
+                { id: "pister", name: "Pister", description: "Suivre une personne ou un animal." },
+                { id: "survie", name: "Survie", description: "Savoir survivre en pleine nature." }
+            ],
+            presence: [
+                { id: "charmer", name: "Charmer", description: "Influencer une tierce personne par la flatterie ou la séduction." },
+                { id: "commander", name: "Commander", description: "Coordonner les actions d'une équipe." },
+                { id: "deguisement", name: "Déguisement", description: "Altérer ses traits pour ressembler à quelqu'un d'autre." },
+                { id: "dressage", name: "Dressage", description: "Contrôler les animaux." },
+                { id: "empathie", name: "Empathie", description: "Identifier les émotions d'autrui." },
+                { id: "escroquerie", name: "Escroquerie", description: "Mentir, bluffer ou tromper les autres." },
+                { id: "intimidation", name: "Intimidation", description: "Influencer autrui par la peur ou les menaces." },
+                { id: "persuasion", name: "Persuasion", description: "Influencer par la diplomatie ou la négociation." },
+                { id: "volonte", name: "Volonté", description: "Supporter le stress, la tentation ou les attaques mentales." }
+            ]
+        };
+
+        // Variable globale pour la fiche en cours
+        let currentCharacter = null;
+        let characters = [];
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCharacters();
+            populateSkillSelect();
+        });
+
+        // Charger les fiches sauvegardées
+        function loadCharacters() {
+            const savedCharacters = localStorage.getItem('zcorps_characters');
+            if (savedCharacters) {
+                characters = JSON.parse(savedCharacters);
+            }
+            displayCharacterList();
+        }
+
+        // Afficher la liste des fiches
+        function displayCharacterList() {
+            const listContainer = document.getElementById('character-list');
+            listContainer.innerHTML = '';
+
+            if (characters.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: var(--secondary-color);">Aucune fiche de personnage créée pour l\'instant.</p>';
+                return;
+            }
+
+            characters.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.onclick = () => loadCharacter(character.id);
+
+                const charItemHTML = Object.entries(character.characteristics)
+                    .map(([key, value]) => `<span class="char-item">${characteristics[key].name}: ${value}D</span>`)
+                    .join('');
+
+                card.innerHTML = `
+                    <div class="name">${character.name}</div>
+                    <div class="characteristics">${charItemHTML}</div>
+                    <div class="skills-count">${Object.keys(character.skills).length} compétences</div>
+                `;
+
+                listContainer.appendChild(card);
+            });
+        }
+
+        // Remplir le sélecteur de compétences
+        function populateSkillSelect() {
+            const select = document.getElementById('new-skill');
+            select.innerHTML = '<option value="">-- Sélectionnez une compétence --</option>';
+
+            Object.entries(skills).forEach(([charId, skillList]) => {
+                skillList.forEach(skill => {
+                    const option = document.createElement('option');
+                    option.value = `${charId}|${skill.id}`;
+                    option.textContent = `${characteristics[charId].name} - ${skill.name}`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Créer une nouvelle fiche
+        function createCharacter() {
+            const nameInput = document.getElementById('character-name');
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                showMessage('Veuillez entrer un nom pour le personnage.', 'error');
+                return;
+            }
+
+            // Vérifier si le nom existe déjà
+            if (characters.some(c => c.name === name)) {
+                showMessage('Un personnage avec ce nom existe déjà.', 'error');
+                return;
+            }
+
+            // Créer une nouvelle fiche
+            const newCharacter = {
+                id: Date.now().toString(),
+                name: name,
+                characteristics: {
+                    agilite: 2,
+                    adresse: 2,
+                    puissance: 2,
+                    connaissances: 2,
+                    perception: 2,
+                    presence: 2
+                },
+                skills: {},
+                createdAt: new Date().toISOString()
+            };
+
+            currentCharacter = newCharacter;
+            characters.push(currentCharacter);
+
+            // Afficher la fiche
+            showCharacterSheet();
+            updateCharacteristicsDisplay();
+            updateSkillsDisplay();
+
+            // Réinitialiser le champ de nom
+            nameInput.value = '';
+        }
+
+        // Charger une fiche existante
+        function loadCharacter(id) {
+            currentCharacter = characters.find(c => c.id === id);
+            if (currentCharacter) {
+                showCharacterSheet();
+                updateCharacteristicsDisplay();
+                updateSkillsDisplay();
+            }
+        }
+
+        // Afficher la fiche de personnage
+        function showCharacterSheet() {
+            document.getElementById('character-sheet-container').classList.remove('hidden');
+            document.getElementById('character-list-container').classList.add('hidden');
+            document.getElementById('sheet-character-name').textContent = currentCharacter.name;
+            document.getElementById('sheet-title').textContent = `Fiche de ${currentCharacter.name}`;
+        }
+
+        // Retour à la liste
+        function backToList() {
+            document.getElementById('character-sheet-container').classList.add('hidden');
+            document.getElementById('character-list-container').classList.remove('hidden');
+            currentCharacter = null;
+        }
+
+        // Mettre à jour l'affichage des caractéristiques
+        function updateCharacteristicsDisplay() {
+            const listContainer = document.getElementById('characteristics-list');
+            listContainer.innerHTML = '';
+
+            let totalUsed = 0;
+            Object.entries(currentCharacter.characteristics).forEach(([key, value]) => {
+                totalUsed += value;
+
+                const item = document.createElement('div');
+                item.className = 'characteristic-item';
+
+                item.innerHTML = `
+                    <span class="name">${characteristics[key].name}</span>
+                    <span class="value">
+                        <input type="number" 
+                               class="dice-input" 
+                               value="${value}" 
+                               min="0" 
+                               max="6"
+                               onchange="updateCharacteristic('${key}', this.value)">
+                        D
+                    </span>
+                `;
+
+                listContainer.appendChild(item);
+            });
+
+            const totalRemaining = 6 - (totalUsed - 12); // 2D par défaut pour 6 caractéristiques = 12D
+            document.getElementById('characteristics-used').textContent = totalUsed;
+            document.getElementById('characteristics-remaining').textContent = totalRemaining;
+
+            // Mettre à jour la classe en fonction des points restants
+            const remainingSpan = document.getElementById('characteristics-remaining');
+            remainingSpan.className = 'points-remaining';
+            if (totalRemaining < 0) {
+                remainingSpan.classList.add('danger');
+            } else if (totalRemaining === 0) {
+                remainingSpan.classList.add('warning');
+            }
+        }
+
+        // Mettre à jour une caractéristique
+        function updateCharacteristic(key, value) {
+            const numValue = parseInt(value) || 0;
+            if (numValue < 0 || numValue > 6) {
+                showMessage('Les caractéristiques doivent être comprises entre 0 et 6.', 'error');
+                updateCharacteristicsDisplay(); // Réafficher pour réinitialiser
+                return;
+            }
+
+            currentCharacter.characteristics[key] = numValue;
+            updateCharacteristicsDisplay();
+        }
+
+        // Mettre à jour l'affichage des compétences
+        function updateSkillsDisplay() {
+            const listContainer = document.getElementById('skills-list');
+            listContainer.innerHTML = '';
+
+            let totalUsed = 0;
+            const skillCount = Object.keys(currentCharacter.skills).length;
+
+            Object.entries(currentCharacter.skills).forEach(([skillId, value]) => {
+                const [charId, skillKey] = skillId.split('|');
+                const skill = skills[charId].find(s => s.id === skillKey);
+                if (!skill) return;
+
+                totalUsed += (value - 1); // 1D par défaut
+
+                const item = document.createElement('div');
+                item.className = 'skill-item';
+
+                item.innerHTML = `
+                    <span class="name">${skill.name}</span>
+                    <span class="value" onclick="rollDice('${charId}', '${skillKey}')">
+                        <span class="dice-roller">
+                            <input type="number" 
+                                   class="dice-input" 
+                                   value="${value}" 
+                                   min="1" 
+                                   max="6"
+                                   onchange="updateSkill('${charId}|${skillKey}', this.value)">
+                            D
+                            <span class="dice-icon">🎲</span>
+                        </span>
+                    </span>
+                `;
+
+                listContainer.appendChild(item);
+            });
+
+            document.getElementById('skills-count').textContent = skillCount;
+            document.getElementById('skills-used').textContent = totalUsed + skillCount; // totalUsed = points supplémentaires
+            document.getElementById('skills-remaining').textContent = 7 - totalUsed;
+
+            // Mettre à jour la classe en fonction des points restants
+            const remainingSpan = document.getElementById('skills-remaining');
+            remainingSpan.className = 'points-remaining';
+            if (7 - totalUsed < 0) {
+                remainingSpan.classList.add('danger');
+            } else if (7 - totalUsed === 0) {
+                remainingSpan.classList.add('warning');
+            }
+
+            // Mettre à jour le sélecteur de compétences (désactiver celles déjà choisies)
+            updateSkillSelect();
+        }
+
+        // Mettre à jour le sélecteur de compétences
+        function updateSkillSelect() {
+            const select = document.getElementById('new-skill');
+            const options = select.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (option.value) {
+                    const [charId, skillKey] = option.value.split('|');
+                    const skillId = `${charId}|${skillKey}`;
+                    if (currentCharacter.skills[skillId]) {
+                        option.disabled = true;
+                    } else {
+                        option.disabled = false;
+                    }
+                }
+            });
+
+            // Désactiver si 12 compétences déjà choisies
+            if (Object.keys(currentCharacter.skills).length >= 12) {
+                select.disabled = true;
+                document.querySelector('.skill-selector .btn').disabled = true;
+            } else {
+                select.disabled = false;
+                document.querySelector('.skill-selector .btn').disabled = false;
+            }
+        }
+
+        // Ajouter une compétence
+        function addSkill() {
+            const select = document.getElementById('new-skill');
+            const value = select.value;
+
+            if (!value) {
+                showMessage('Veuillez sélectionner une compétence.', 'error');
+                return;
+            }
+
+            if (Object.keys(currentCharacter.skills).length >= 12) {
+                showMessage('Vous avez déjà 12 compétences ouvertes.', 'error');
+                return;
+            }
+
+            // Vérifier si la compétence est déjà ajoutée
+            if (currentCharacter.skills[value]) {
+                showMessage('Cette compétence est déjà ajoutée.', 'error');
+                return;
+            }
+
+            // Ajouter la compétence avec 1D par défaut
+            currentCharacter.skills[value] = 1;
+            updateSkillsDisplay();
+            select.value = '';
+        }
+
+        // Mettre à jour une compétence
+        function updateSkill(skillId, value) {
+            const numValue = parseInt(value) || 1;
+            if (numValue < 1 || numValue > 6) {
+                showMessage('Les compétences doivent être comprises entre 1 et 6.', 'error');
+                updateSkillsDisplay(); // Réafficher pour réinitialiser
+                return;
+            }
+
+            currentCharacter.skills[skillId] = numValue;
+            updateSkillsDisplay();
+        }
+
+        // Lancer les dés pour une compétence
+        function rollDice(charId, skillKey) {
+            const skillId = `${charId}|${skillKey}`;
+            const skillValue = currentCharacter.skills[skillId] || 0;
+            const charValue = currentCharacter.characteristics[charId] || 0;
+            const totalDice = skillValue + charValue;
+
+            if (totalDice <= 0) {
+                showMessage('Impossible de lancer des dés avec une valeur de 0.', 'error');
+                return;
+            }
+
+            // Lancer les dés
+            const results = [];
+            for (let i = 0; i < totalDice; i++) {
+                results.push(Math.floor(Math.random() * 6) + 1);
+            }
+
+            const sum = results.reduce((a, b) => a + b, 0);
+
+            // Afficher les résultats dans la modale
+            const modal = document.getElementById('dice-modal');
+            const modalTitle = document.getElementById('dice-modal-title');
+            const modalContent = document.getElementById('dice-modal-content');
+
+            const skill = skills[charId].find(s => s.id === skillKey);
+            modalTitle.textContent = `${skill.name} (${characteristics[charId].name})`;
+
+            let diceHTML = `<p style="text-align: center; margin-bottom: 15px;">
+                <strong>${totalDice}D6</strong> (${skillValue}D compétence + ${charValue}D caractéristique)
+            </p>`;
+
+            diceHTML += '<div class="dice-result">';
+            results.forEach(result => {
+                diceHTML += `<div class="dice">${result}</div>`;
+            });
+            diceHTML += `<div class="dice total">${sum}</div>`;
+            diceHTML += '</div>';
+
+            diceHTML += `<p style="text-align: center; margin-top: 15px; font-weight: bold;">Total : ${sum}</p>`;
+
+            modalContent.innerHTML = diceHTML;
+            modal.style.display = 'flex';
+        }
+
+        // Fermer la modale des dés
+        function closeDiceModal() {
+            document.getElementById('dice-modal').style.display = 'none';
+        }
+
+        // Sauvegarder la fiche
+        function saveCharacter() {
+            // Vérifier les points des caractéristiques
+            const charTotal = Object.values(currentCharacter.characteristics).reduce((a, b) => a + b, 0);
+            if (charTotal !== 12 + 6) { // 2D par défaut * 6 + 6D à répartir
+                showMessage('Vous devez répartir exactement 6D supplémentaires pour les caractéristiques (total = 18D).', 'error');
+                return;
+            }
+
+            // Vérifier les points des compétences
+            const skillTotal = Object.values(currentCharacter.skills).reduce((a, b) => a + (b - 1), 0);
+            if (skillTotal > 7) {
+                showMessage('Vous ne pouvez pas dépasser 7D supplémentaires pour les compétences.', 'error');
+                return;
+            }
+
+            if (Object.keys(currentCharacter.skills).length < 12) {
+                showMessage('Vous devez choisir 12 compétences.', 'error');
+                return;
+            }
+
+            // Sauvegarder dans le localStorage
+            localStorage.setItem('zcorps_characters', JSON.stringify(characters));
+            showMessage('Fiche sauvegardée avec succès !', 'success');
+            displayCharacterList();
+        }
+
+        // Supprimer la fiche
+        function deleteCharacter() {
+            if (!currentCharacter) return;
+
+            if (confirm(`Voulez-vous vraiment supprimer la fiche de ${currentCharacter.name} ?`)) {
+                characters = characters.filter(c => c.id !== currentCharacter.id);
+                localStorage.setItem('zcorps_characters', JSON.stringify(characters));
+                showMessage('Fiche supprimée avec succès.', 'success');
+                backToList();
+                displayCharacterList();
+            }
+        }
+
+        // Exporter la fiche
+        function exportCharacter() {
+            if (!currentCharacter) return;
+
+            const dataStr = JSON.stringify(currentCharacter, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${currentCharacter.name.replace(/\s+/g, '_')}_zcorps.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showMessage('Fiche exportée avec succès !', 'success');
+        }
+
+        // Afficher un message
+        function showMessage(message, type) {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="${type}-message">${message}</div>`;
+
+            // Supprimer le message après 5 secondes
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Fermer la modale en cliquant à l'extérieur
+        window.onclick = function(event) {
+            const modal = document.getElementById('dice-modal');
+            if (event.target === modal) {
+                closeDiceModal();
+            }
+        }
+    </script>
+</body>
+</html>
