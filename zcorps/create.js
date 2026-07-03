@@ -1,11 +1,11 @@
-// Application ZCorps - Gestion de fiches de personnage
+// Application ZCorps - Création de fiches de personnage
 
 // Variables globales
 let characters = [];
 let currentCharacter = null;
 let currentCharacterIndex = null;
 let selectedSkills = [];
-let pendingSkill = null; // Pour gérer l'ajout de compétence avec valeur
+let pendingSkill = null;
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,8 +13,21 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     updateAttributePoints();
     
-    // Masquer la section de création au démarrage
-    document.getElementById('creation-section').classList.add('hidden');
+    // Vérifier si on est en mode édition
+    const editIndex = localStorage.getItem('zcorps_edit_index');
+    if (editIndex !== null) {
+        currentCharacterIndex = parseInt(editIndex);
+        currentCharacter = characters[currentCharacterIndex];
+        if (currentCharacter) {
+            editCharacter();
+        }
+        localStorage.removeItem('zcorps_edit_index');
+    } else {
+        // Masquer la section de création au démarrage si pas en édition
+        document.getElementById('creation-section').classList.add('hidden');
+    }
+    
+    validateForm();
 });
 
 // Charger les personnages depuis le localStorage
@@ -23,7 +36,6 @@ function loadCharacters() {
     if (savedCharacters) {
         characters = JSON.parse(savedCharacters);
     }
-    displayCharactersList();
 }
 
 // Sauvegarder les personnages dans le localStorage
@@ -34,20 +46,11 @@ function saveCharacters() {
 // Configurer les écouteurs d'événements
 function setupEventListeners() {
     // Boutons de navigation
-    document.getElementById('new-char-btn').addEventListener('click', showCreationForm);
-    document.getElementById('cancel-btn').addEventListener('click', showCharactersList);
-    document.getElementById('back-to-list-btn').addEventListener('click', showCharactersList);
+    document.getElementById('cancel-btn').addEventListener('click', cancelCreation);
     
     // Formulaire de création
     document.getElementById('character-form').addEventListener('submit', saveCharacter);
-    document.getElementById("char-name").addEventListener("input", validateForm);
-    document.getElementById("char-name").addEventListener("change", validateForm);
     document.getElementById('add-skill-btn').addEventListener('click', addSelectedSkills);
-    document.getElementById("save-char-btn").addEventListener("click", function(e) {
-        if (!this.disabled) {
-            document.getElementById("character-form").dispatchEvent(new Event("submit"));
-        }
-    });
     
     // Écouteurs pour les caractéristiques
     const attrInputs = document.querySelectorAll('[data-attr]');
@@ -67,35 +70,24 @@ function setupEventListeners() {
         });
     });
     
-    // Boutons de la vue de fiche
-    document.getElementById('edit-char-btn').addEventListener('click', editCharacter);
-    document.getElementById('delete-char-btn').addEventListener('click', deleteCharacter);
-    
-    // Modal de dés
-    document.getElementById('close-modal-btn').addEventListener('click', closeDiceModal);
+    // Écouteur pour le champ nom
+    document.getElementById('char-name').addEventListener('input', validateForm);
+    document.getElementById('char-name').addEventListener('change', validateForm);
     
     // Modal de valeur de compétence
     document.getElementById('confirm-skill-value-btn').addEventListener('click', confirmSkillValue);
     document.getElementById('cancel-skill-value-btn').addEventListener('click', cancelSkillValue);
 }
 
-// Afficher le formulaire de création
-function showCreationForm() {
-    document.getElementById('list-section').classList.add('hidden');
-    document.getElementById('view-section').classList.add('hidden');
-    document.getElementById('creation-section').classList.remove('hidden');
-    
-    // Réinitialiser le formulaire
-    resetForm();
+// Annuler la création et retourner à la liste
+function cancelCreation() {
+    window.location.href = 'list.html';
 }
 
-// Afficher la liste des personnages
-function showCharactersList() {
-    document.getElementById('creation-section').classList.add('hidden');
-    document.getElementById('view-section').classList.add('hidden');
-    document.getElementById('list-section').classList.remove('hidden');
-    
-    displayCharactersList();
+// Afficher le formulaire de création
+function showCreationForm() {
+    document.getElementById('creation-section').classList.remove('hidden');
+    resetForm();
 }
 
 // Réinitialiser le formulaire
@@ -131,168 +123,54 @@ function resetForm() {
 }
 
 // Afficher la liste des personnages
-function displayCharactersList() {
-    const charactersList = document.getElementById('characters-list');
-    
-    if (characters.length === 0) {
-        charactersList.innerHTML = '<p>Aucune fiche sauvegardée pour l\'instant.</p>';
-        return;
-    }
-    
-    charactersList.innerHTML = '';
-    
-    characters.forEach((character, index) => {
-        const card = document.createElement('div');
-        card.className = 'character-card';
-        card.dataset.index = index;
-        
-        const typeClass = character.type === 'Joueur' ? 'joueur' : 'pnj';
-        
-        const totalSkillPoints = character.skills.reduce((sum, skill) => sum + (skill.value - 1), 0);
-        
-        card.innerHTML = `
-            <h3>${character.name}</h3>
-            <span class="char-type ${typeClass}">${character.type}</span>
-            <div class="char-preview">
-                ${Object.entries(character.attributes).map(([attrId, value]) => 
-                    `<div><span>${getAttributeName(attrId)}:</span> <strong>${value}D</strong></div>`
-                ).join('')}
-            </div>
-            <div class="char-preview">
-                <strong>${character.skills.length} compétences</strong> (${totalSkillPoints}D supplémentaires)
-            </div>
-        `;
-        
-        card.addEventListener('click', () => viewCharacter(index));
-        charactersList.appendChild(card);
-    });
+function showCharactersList() {
+    window.location.href = 'list.html';
 }
 
-// Visualiser un personnage
-function viewCharacter(index) {
-    currentCharacter = characters[index];
-    currentCharacterIndex = index;
+// Modifier un personnage
+function editCharacter() {
+    if (!currentCharacter) return;
     
-    document.getElementById('list-section').classList.add('hidden');
-    document.getElementById('creation-section').classList.add('hidden');
-    document.getElementById('view-section').classList.remove('hidden');
+    // Remplir le formulaire avec les données du personnage
+    document.getElementById('char-name').value = currentCharacter.name;
+    document.getElementById('char-type').value = currentCharacter.type;
     
-    // Mettre à jour les informations
-    document.getElementById('view-char-name').textContent = currentCharacter.name;
-    const typeBadge = document.getElementById('view-char-type');
-    typeBadge.textContent = currentCharacter.type;
-    typeBadge.className = `char-type-badge ${currentCharacter.type === 'Joueur' ? 'joueur' : 'pnj'}`;
-    
-    // Afficher les caractéristiques
-    displayViewAttributes();
-    
-    // Afficher les compétences
-    displayViewSkills();
-    
-    // Effacer le résultat des dés
-    document.getElementById('dice-result').innerHTML = '';
-}
-
-// Afficher les caractéristiques dans la vue
-function displayViewAttributes() {
-    const container = document.getElementById('view-attributes');
-    container.innerHTML = '';
-    
+    // Remplir les caractéristiques
     Object.entries(currentCharacter.attributes).forEach(([attrId, value]) => {
-        const attrDiv = document.createElement('div');
-        attrDiv.className = 'view-attribute';
-        
-        attrDiv.innerHTML = `
-            <span class="attr-name">${getAttributeName(attrId)}</span>
-            <span class="attr-value">${value}D</span>
-        `;
-        
-        container.appendChild(attrDiv);
-    });
-}
-
-// Afficher les compétences dans la vue
-function displayViewSkills() {
-    const container = document.getElementById('view-skills');
-    container.innerHTML = '';
-    
-    currentCharacter.skills.forEach(skill => {
-        const skillDiv = document.createElement('div');
-        skillDiv.className = 'view-skill';
-        
-        const attrId = getSkillAttribute(skill.name);
-        const attrValue = currentCharacter.attributes[attrId] || 0;
-        const totalDice = attrValue + skill.value;
-        
-        skillDiv.innerHTML = `
-            <span class="skill-name">${skill.name}</span>
-            <span class="skill-value">${skill.value}D</span>
-            <span class="skill-attr">${getAttributeName(attrId)}: ${attrValue}D</span>
-            <span class="skill-total">Total: ${totalDice}D6</span>
-        `;
-        
-        skillDiv.addEventListener('click', () => rollDice(skill.name, attrId));
-        
-        container.appendChild(skillDiv);
-    });
-}
-
-// Lancer les dés pour une compétence
-function rollDice(skillName, attrId) {
-    const attrValue = currentCharacter.attributes[attrId] || 0;
-    const skill = currentCharacter.skills.find(s => s.name === skillName);
-    const skillValue = skill ? skill.value : 0;
-    
-    const numDice = attrValue + skillValue;
-    
-    if (numDice <= 0) {
-        alert("Impossible de lancer des dés : la somme de l'attribut et de la compétence est de 0D");
-        return;
-    }
-    
-    // Lancer les dés
-    const rolls = [];
-    for (let i = 0; i < numDice; i++) {
-        rolls.push(Math.floor(Math.random() * 6) + 1);
-    }
-    
-    const total = rolls.reduce((sum, roll) => sum + roll, 0);
-    
-    // Afficher le modal
-    showDiceModal(skillName, attrId, numDice, rolls, total);
-}
-
-// Afficher le modal de dés
-function showDiceModal(skillName, attrId, numDice, rolls, total) {
-    const modal = document.getElementById('dice-modal');
-    const attrName = getAttributeName(attrId);
-    
-    document.getElementById('dice-modal-info').textContent = 
-        `Test de ${skillName} (${attrName} + ${skillName}): ${numDice}D6`;
-    
-    // Animation des dés
-    const diceAnimation = document.getElementById('dice-animation');
-    diceAnimation.innerHTML = '';
-    
-    rolls.forEach(roll => {
-        const dice = document.createElement('div');
-        dice.className = 'dice';
-        dice.textContent = roll;
-        diceAnimation.appendChild(dice);
+        const input = document.getElementById(`attr-${attrId}`);
+        if (input) {
+            input.value = value;
+            const diceIndicator = input.nextElementSibling;
+            if (diceIndicator && diceIndicator.classList.contains('dice-indicator')) {
+                diceIndicator.textContent = `${value}D`;
+            }
+        }
     });
     
-    document.getElementById('dice-total').textContent = total;
+    // Remplir les compétences
+    selectedSkills = currentCharacter.skills.map(skill => ({
+        name: skill.name,
+        attribute: skill.attribute,
+        value: skill.value
+    }));
     
-    // Détails des dés
-    const diceDetails = document.getElementById('dice-details');
-    diceDetails.innerHTML = rolls.map(roll => `<span>${roll}</span>`).join(' + ');
+    // Cocher les checkboxes des compétences sélectionnées
+    selectedSkills.forEach(skill => {
+        const checkboxes = document.querySelectorAll('.skill-checkboxes input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.dataset.skill === skill.name) {
+                checkbox.checked = true;
+            }
+        });
+    });
     
-    modal.classList.remove('hidden');
-}
-
-// Fermer le modal de dés
-function closeDiceModal() {
-    document.getElementById('dice-modal').classList.add('hidden');
+    updateSelectedSkillsDisplay();
+    updateSelectedSkillsCount();
+    updateAttributePoints();
+    validateForm();
+    
+    // Afficher le formulaire
+    document.getElementById('creation-section').classList.remove('hidden');
 }
 
 // Mettre à jour le compteur de compétences sélectionnées
@@ -548,7 +426,7 @@ function validateForm() {
 
 // Sauvegarder un personnage
 function saveCharacter(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     
     const name = document.getElementById('char-name').value.trim();
     const type = document.getElementById('char-type').value;
@@ -581,76 +459,15 @@ function saveCharacter(e) {
     }
     
     saveCharacters();
-    showCharactersList();
-}
-
-// Modifier un personnage
-function editCharacter() {
-    if (!currentCharacter) return;
     
-    // Remplir le formulaire avec les données du personnage
-    document.getElementById('char-name').value = currentCharacter.name;
-    document.getElementById('char-type').value = currentCharacter.type;
-    
-    // Remplir les caractéristiques
-    Object.entries(currentCharacter.attributes).forEach(([attrId, value]) => {
-        const input = document.getElementById(`attr-${attrId}`);
-        if (input) {
-            input.value = value;
-            const diceIndicator = input.nextElementSibling;
-            if (diceIndicator && diceIndicator.classList.contains('dice-indicator')) {
-                diceIndicator.textContent = `${value}D`;
-            }
-        }
-    });
-    
-    // Remplir les compétences
-    selectedSkills = currentCharacter.skills.map(skill => ({
-        name: skill.name,
-        attribute: skill.attribute,
-        value: skill.value
-    }));
-    
-    // Cocher les checkboxes des compétences sélectionnées
-    selectedSkills.forEach(skill => {
-        const checkboxes = document.querySelectorAll('.skill-checkboxes input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            if (checkbox.dataset.skill === skill.name) {
-                checkbox.checked = true;
-            }
-        });
-    });
-    
-    updateSelectedSkillsDisplay();
-    updateSelectedSkillsCount();
-    updateAttributePoints();
-    validateForm();
-    
-    // Afficher le formulaire
-    document.getElementById('list-section').classList.add('hidden');
-    document.getElementById('view-section').classList.add('hidden');
-    document.getElementById('creation-section').classList.remove('hidden');
-}
-
-// Supprimer un personnage
-function deleteCharacter() {
-    if (currentCharacterIndex === null) return;
-    
-    if (confirm(`Voulez-vous vraiment supprimer la fiche de ${currentCharacter.name} ?`)) {
-        characters.splice(currentCharacterIndex, 1);
-        saveCharacters();
-        showCharactersList();
-    }
+    // Rediriger vers la page de liste
+    window.location.href = 'list.html';
 }
 
 // Fermer les modals en cliquant à l'extérieur
 window.addEventListener('click', function(e) {
-    const diceModal = document.getElementById('dice-modal');
     const skillValueModal = document.getElementById('skill-value-modal');
     
-    if (e.target === diceModal) {
-        closeDiceModal();
-    }
     if (e.target === skillValueModal) {
         closeSkillValueModal();
     }
@@ -659,7 +476,6 @@ window.addEventListener('click', function(e) {
 // Gérer la touche Échap pour fermer les modals
 window.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        closeDiceModal();
         closeSkillValueModal();
     }
 });
