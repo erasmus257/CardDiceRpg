@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZCorps - Liste des Personnages</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ZCorps - Liste des Personnages</h1>
+            <p>Consultez et utilisez vos fiches de personnage pour le JDR ZCorps</p>
+        </header>
+
+        <main>
+            <nav class="main-nav">
+                <a href="list.html" class="nav-btn active">Liste des fiches</a>
+                <a href="create.html" class="nav-btn">Créer une fiche</a>
+            </nav>
+
+            <!-- Section liste des fiches -->
+            <section id="list-section" class="section">
+                <h2>Vos fiches de personnage</h2>
+                <div class="characters-list" id="characters-list">
+                    <p>Aucune fiche sauvegardée pour l'instant.</p>
+                </div>
+            </section>
+
+            <!-- Section visualisation de fiche -->
+            <section id="view-section" class="section hidden">
+                <nav class="sub-nav">
+                    <button id="back-to-list-btn" class="nav-btn">← Retour à la liste</button>
+                </nav>
+                
+                <h2 id="view-char-name">Nom du personnage</h2>
+                <div class="char-type-badge" id="view-char-type">Joueur</div>
+                
+                <div class="character-sheet">
+                    <div class="attributes-display">
+                        <h3>Caractéristiques</h3>
+                        <div class="attributes-grid" id="view-attributes"></div>
+                    </div>
+
+                    <div class="skills-display">
+                        <h3>Compétences</h3>
+                        <p class="help-text">Cliquez sur une compétence pour lancer les dés</p>
+                        <div class="skills-grid" id="view-skills"></div>
+                    </div>
+                </div>
+
+                <div class="dice-result" id="dice-result"></div>
+
+                <div class="view-actions">
+                    <button id="edit-char-btn" class="btn-secondary">Modifier la fiche</button>
+                    <button id="delete-char-btn" class="btn-danger">Supprimer</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Application ZCorps - Fiches de personnage | JDR ZCorps</p>
+        </footer>
+    </div>
+
+    <!-- Modal pour le jet de dés -->
+    <div id="dice-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Lancer de dés</h3>
+            <p id="dice-modal-info"></p>
+            <div class="dice-animation" id="dice-animation"></div>
+            <p>Résultat : <span id="dice-total">0</span></p>
+            <div class="dice-details" id="dice-details"></div>
+            <button id="close-modal-btn" class="btn-primary">Fermer</button>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="list.js"></script>
+</body>
+</html>
