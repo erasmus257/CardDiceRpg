@@ -5,6 +5,7 @@ let characters = [];
 let currentCharacter = null;
 let currentCharacterIndex = null;
 let selectedSkills = [];
+let pendingSkill = null; // Pour gérer l'ajout de compétence avec valeur
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', function() {
@@ -65,6 +66,10 @@ function setupEventListeners() {
     
     // Modal de dés
     document.getElementById('close-modal-btn').addEventListener('click', closeDiceModal);
+    
+    // Modal de valeur de compétence
+    document.getElementById('confirm-skill-value-btn').addEventListener('click', confirmSkillValue);
+    document.getElementById('cancel-skill-value-btn').addEventListener('click', cancelSkillValue);
 }
 
 // Afficher le formulaire de création
@@ -115,6 +120,7 @@ function resetForm() {
     
     currentCharacter = null;
     currentCharacterIndex = null;
+    pendingSkill = null;
 }
 
 // Afficher la liste des personnages
@@ -135,6 +141,8 @@ function displayCharactersList() {
         
         const typeClass = character.type === 'Joueur' ? 'joueur' : 'pnj';
         
+        const totalSkillPoints = character.skills.reduce((sum, skill) => sum + (skill.value - 1), 0);
+        
         card.innerHTML = `
             <h3>${character.name}</h3>
             <span class="char-type ${typeClass}">${character.type}</span>
@@ -144,7 +152,7 @@ function displayCharactersList() {
                 ).join('')}
             </div>
             <div class="char-preview">
-                <strong>${character.skills.length} compétences</strong>
+                <strong>${character.skills.length} compétences</strong> (${totalSkillPoints}D supplémentaires)
             </div>
         `;
         
@@ -309,11 +317,13 @@ function updateSelectedSkillsDisplay() {
         skillDiv.className = 'skill-item';
         
         const attrId = getSkillAttribute(skill.name);
+        const pointsAboveOne = skill.value - 1;
+        const pointsText = pointsAboveOne > 0 ? ` (+${pointsAboveOne}D)` : '';
         
         skillDiv.innerHTML = `
             <span>${skill.name}</span>
             <input type="number" min="1" max="7" value="${skill.value}" data-index="${index}" class="skill-value-input">
-            <span class="dice-indicator">${skill.value}D</span>
+            <span class="dice-indicator">${skill.value}D${pointsText}</span>
             <span class="remove-skill" data-index="${index}">&times;</span>
         `;
         
@@ -337,7 +347,9 @@ function updateSelectedSkillsDisplay() {
             // Mettre à jour l'affichage
             const diceIndicator = this.nextElementSibling;
             if (diceIndicator && diceIndicator.classList.contains('dice-indicator')) {
-                diceIndicator.textContent = `${value}D`;
+                const pointsAboveOne = value - 1;
+                const pointsText = pointsAboveOne > 0 ? ` (+${pointsAboveOne}D)` : '';
+                diceIndicator.textContent = `${value}D${pointsText}`;
             }
         });
     });
@@ -372,6 +384,13 @@ function updateSelectedSkillsDisplay() {
 function addSelectedSkills() {
     const checkboxes = document.querySelectorAll('.skill-checkboxes input[type="checkbox"]:checked');
     
+    if (checkboxes.length === 0) {
+        alert("Veuillez sélectionner au moins une compétence");
+        return;
+    }
+    
+    // Pour chaque compétence cochée, demander sa valeur
+    const skillsToAdd = [];
     checkboxes.forEach(checkbox => {
         const skillName = checkbox.dataset.skill;
         const attrId = checkbox.dataset.attr;
@@ -379,23 +398,94 @@ function addSelectedSkills() {
         // Vérifier si la compétence est déjà ajoutée
         const exists = selectedSkills.some(skill => skill.name === skillName);
         if (!exists) {
-            selectedSkills.push({
-                name: skillName,
-                attribute: attrId,
-                value: 1
-            });
+            skillsToAdd.push({ name: skillName, attribute: attrId });
         }
     });
     
-    updateSelectedSkillsDisplay();
+    if (skillsToAdd.length === 0) {
+        alert("Toutes les compétences sélectionnées sont déjà ajoutées");
+        return;
+    }
     
-    // Décocher toutes les checkboxes
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
+    // Si une seule compétence, demander sa valeur directement
+    if (skillsToAdd.length === 1) {
+        showSkillValueModal(skillsToAdd[0], 0);
+    } else {
+        // Sinon, ajouter toutes avec valeur par défaut (1D)
+        skillsToAdd.forEach(skill => {
+            selectedSkills.push({
+                name: skill.name,
+                attribute: skill.attribute,
+                value: 1
+            });
+        });
+        
+        updateSelectedSkillsDisplay();
+        
+        // Décocher toutes les checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        updateSelectedSkillsCount();
+        validateForm();
+    }
+}
+
+// Afficher le modal pour choisir la valeur d'une compétence
+function showSkillValueModal(skill, indexInQueue) {
+    pendingSkill = skill;
     
-    updateSelectedSkillsCount();
-    validateForm();
+    const modal = document.getElementById('skill-value-modal');
+    document.getElementById('skill-value-title').textContent = `Valeur pour ${skill.name}`;
+    document.getElementById('skill-value-info').textContent = `Définissez la valeur en D pour cette compétence (1D par défaut, + vos points supplémentaires)`;
+    document.getElementById('skill-value-input').value = 1;
+    document.getElementById('skill-value-input').focus();
+    
+    modal.classList.remove('hidden');
+}
+
+// Confirmer la valeur de la compétence
+function confirmSkillValue() {
+    const input = document.getElementById('skill-value-input');
+    let value = parseInt(input.value) || 1;
+    
+    if (value < 1) value = 1;
+    if (value > 7) value = 7;
+    
+    if (pendingSkill) {
+        selectedSkills.push({
+            name: pendingSkill.name,
+            attribute: pendingSkill.attribute,
+            value: value
+        });
+        
+        // Décocher la checkbox correspondante
+        const checkboxes = document.querySelectorAll('.skill-checkboxes input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.dataset.skill === pendingSkill.name) {
+                checkbox.checked = false;
+            }
+        });
+        
+        pendingSkill = null;
+        updateSelectedSkillsDisplay();
+        updateSelectedSkillsCount();
+        validateForm();
+    }
+    
+    closeSkillValueModal();
+}
+
+// Annuler la valeur de la compétence
+function cancelSkillValue() {
+    pendingSkill = null;
+    closeSkillValueModal();
+}
+
+// Fermer le modal de valeur de compétence
+function closeSkillValueModal() {
+    document.getElementById('skill-value-modal').classList.add('hidden');
 }
 
 // Mettre à jour les points utilisés pour les compétences
@@ -432,15 +522,6 @@ function updateAttributePoints() {
         }
     });
     
-    document.getElementById('attr-points-used').textContent = totalPoints;
-    
-    const warning = document.getElementById('attr-warning');
-    if (totalPoints > 12) {
-        warning.textContent = 'Maximum recommandé : 12D';
-    } else {
-        warning.textContent = '';
-    }
-    
     validateForm();
 }
 
@@ -452,7 +533,6 @@ function validateForm() {
     const addSkillBtn = document.getElementById('add-skill-btn');
     
     // On permet de sauvegarder tant qu'il y a un nom
-    // Plus de restriction sur les points ou le nombre de compétences
     saveBtn.disabled = !name;
     
     // On limite juste à 12 compétences maximum
@@ -556,17 +636,23 @@ function deleteCharacter() {
     }
 }
 
-// Fermer le modal en cliquant à l'extérieur
+// Fermer les modals en cliquant à l'extérieur
 window.addEventListener('click', function(e) {
-    const modal = document.getElementById('dice-modal');
-    if (e.target === modal) {
+    const diceModal = document.getElementById('dice-modal');
+    const skillValueModal = document.getElementById('skill-value-modal');
+    
+    if (e.target === diceModal) {
         closeDiceModal();
+    }
+    if (e.target === skillValueModal) {
+        closeSkillValueModal();
     }
 });
 
-// Gérer la touche Échap pour fermer le modal
+// Gérer la touche Échap pour fermer les modals
 window.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeDiceModal();
+        closeSkillValueModal();
     }
 });
