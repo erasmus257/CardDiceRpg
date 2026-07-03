@@ -40,7 +40,14 @@ function setupEventListeners() {
     
     // Formulaire de création
     document.getElementById('character-form').addEventListener('submit', saveCharacter);
+    document.getElementById("char-name").addEventListener("input", validateForm);
+    document.getElementById("char-name").addEventListener("change", validateForm);
     document.getElementById('add-skill-btn').addEventListener('click', addSelectedSkills);
+    document.getElementById("save-char-btn").addEventListener("click", function(e) {
+        if (!this.disabled) {
+            document.getElementById("character-form").dispatchEvent(new Event("submit"));
+        }
+    });
     
     // Écouteurs pour les caractéristiques
     const attrInputs = document.querySelectorAll('[data-attr]');
