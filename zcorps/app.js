@@ -105,6 +105,7 @@ function resetForm() {
     const skillCheckboxes = document.querySelectorAll('.skill-checkboxes input[type="checkbox"]');
     skillCheckboxes.forEach(checkbox => {
         checkbox.checked = false;
+        checkbox.disabled = false;
     });
     
     selectedSkills = [];
@@ -285,7 +286,7 @@ function updateSelectedSkillsCount() {
     const count = checkboxes.length;
     document.getElementById('skills-count').textContent = count;
     
-    // Désactiver les checkboxes si on a déjà 12 compétences
+    // Désactiver les checkboxes si on a déjà 12 compétences (maximum)
     const allCheckboxes = document.querySelectorAll('.skill-checkboxes input[type="checkbox"]');
     allCheckboxes.forEach(checkbox => {
         if (count >= 12 && !checkbox.checked) {
@@ -324,14 +325,19 @@ function updateSelectedSkillsDisplay() {
     valueInputs.forEach(input => {
         input.addEventListener('input', function() {
             const index = parseInt(this.dataset.index);
-            selectedSkills[index].value = parseInt(this.value) || 1;
+            let value = parseInt(this.value) || 1;
+            // Limiter à max 7
+            if (value > 7) value = 7;
+            if (value < 1) value = 1;
+            selectedSkills[index].value = value;
+            this.value = value;
             updateSkillsPoints();
             validateForm();
             
             // Mettre à jour l'affichage
             const diceIndicator = this.nextElementSibling;
             if (diceIndicator && diceIndicator.classList.contains('dice-indicator')) {
-                diceIndicator.textContent = `${selectedSkills[index].value}D`;
+                diceIndicator.textContent = `${value}D`;
             }
         });
     });
@@ -341,6 +347,7 @@ function updateSelectedSkillsDisplay() {
     removeButtons.forEach(button => {
         button.addEventListener('click', function() {
             const index = parseInt(this.dataset.index);
+            const skillName = selectedSkills[index].name;
             selectedSkills.splice(index, 1);
             updateSelectedSkillsDisplay();
             updateSkillsPoints();
@@ -350,7 +357,7 @@ function updateSelectedSkillsDisplay() {
             // Réactiver la checkbox correspondante
             const checkboxes = document.querySelectorAll('.skill-checkboxes input[type="checkbox"]');
             checkboxes.forEach(checkbox => {
-                if (checkbox.dataset.skill === skill.name) {
+                if (checkbox.dataset.skill === skillName) {
                     checkbox.checked = false;
                     checkbox.disabled = false;
                 }
@@ -398,7 +405,7 @@ function updateSkillsPoints() {
     
     const warning = document.getElementById('skills-warning');
     if (totalPoints > 7) {
-        warning.textContent = 'Trop de points utilisés !';
+        warning.textContent = 'Maximum recommandé : 7D';
     } else {
         warning.textContent = '';
     }
@@ -410,7 +417,12 @@ function updateAttributePoints() {
     let totalPoints = 0;
     
     attrInputs.forEach(input => {
-        const value = parseInt(input.value) || 0;
+        let value = parseInt(input.value) || 0;
+        // Limiter à max 6
+        if (value > 6) value = 6;
+        if (value < 0) value = 0;
+        input.value = value;
+        
         totalPoints += value;
         
         // Mettre à jour l'indicateur de dés
@@ -424,7 +436,7 @@ function updateAttributePoints() {
     
     const warning = document.getElementById('attr-warning');
     if (totalPoints > 12) {
-        warning.textContent = 'Trop de points utilisés !';
+        warning.textContent = 'Maximum recommandé : 12D';
     } else {
         warning.textContent = '';
     }
@@ -435,27 +447,16 @@ function updateAttributePoints() {
 // Valider le formulaire
 function validateForm() {
     const name = document.getElementById('char-name').value.trim();
-    const attrInputs = document.querySelectorAll('[data-attr]');
-    let totalAttrPoints = 0;
-    
-    attrInputs.forEach(input => {
-        totalAttrPoints += parseInt(input.value) || 0;
-    });
-    
-    const totalSkillPoints = selectedSkills.reduce((sum, skill) => sum + (skill.value - 1), 0);
-    const skillsCount = selectedSkills.length;
     
     const saveBtn = document.getElementById('save-char-btn');
     const addSkillBtn = document.getElementById('add-skill-btn');
     
-    // Valider les caractéristiques
-    const attrValid = name && totalAttrPoints === 12;
+    // On permet de sauvegarder tant qu'il y a un nom
+    // Plus de restriction sur les points ou le nombre de compétences
+    saveBtn.disabled = !name;
     
-    // Valider les compétences
-    const skillsValid = skillsCount === 12 && totalSkillPoints === 7;
-    
-    saveBtn.disabled = !(attrValid && skillsValid);
-    addSkillBtn.disabled = skillsCount >= 12;
+    // On limite juste à 12 compétences maximum
+    addSkillBtn.disabled = selectedSkills.length >= 12;
 }
 
 // Sauvegarder un personnage
