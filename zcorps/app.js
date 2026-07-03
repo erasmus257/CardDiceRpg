@@ -534,7 +534,7 @@ function validateForm() {
     
     // On permet de sauvegarder tant qu'il y a un nom
     //saveBtn.disabled = !name;
-    //saveBtn.disabled = false ;
+    saveBtn.disabled = false ;
 
     
     // On limite juste à 12 compétences maximum
