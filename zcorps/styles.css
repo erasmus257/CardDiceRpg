@@ -620,3 +620,82 @@ button:disabled {
 ::-webkit-scrollbar-thumb:hover {
     background: #3a5a8f;
 }
+
+/* Modal pour la valeur de compétence */
+#skill-value-modal.modal-content {
+    max-width: 400px;
+}
+
+#skill-value-modal .form-group {
+    margin: 20px 0;
+}
+
+#skill-value-modal label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+#skill-value-modal input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Style pour les labels de compétences */
+.skill-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+}
+
+.skill-label:hover {
+    background-color: rgba(74, 111, 165, 0.1);
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 3px;
+}
+
+/* Style pour le texte d'aide */
+.help-text {
+    color: #666;
+    font-size: 0.9em;
+    font-style: italic;
+    margin: 10px 0;
+}
+
+/* Style pour les points supplémentaires */
+.dice-indicator {
+    font-size: 0.85em;
+}
+
+/* Amélioration des skill-items */
+.skill-item {
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.skill-item:hover {
+    background-color: #f0f8ff;
+    transform: translateX(2px);
+}
+
+.skill-item input[type="number"] {
+    width: 55px;
+    padding: 4px;
+    font-size: 0.9em;
+}
