@@ -251,7 +251,7 @@ button {
     transition: background-color 0.3s;
 }
 
-button:disabled {
+button:enable {
     opacity: 0.5;
     cursor: not-allowed;
 }
