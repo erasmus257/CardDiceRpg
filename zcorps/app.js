@@ -533,10 +533,10 @@ function validateForm() {
     const addSkillBtn = document.getElementById('add-skill-btn');
     
     // On permet de sauvegarder tant qu'il y a un nom
-    saveBtn.disabled = !name;
+    //saveBtn.disabled = !name;
     
     // On limite juste à 12 compétences maximum
-    addSkillBtn.disabled = selectedSkills.length >= 12;
+    //addSkillBtn.disabled = selectedSkills.length >= 12;
 }
 
 // Sauvegarder un personnage
